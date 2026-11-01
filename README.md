@@ -22,6 +22,12 @@ Le champ couvre les ventes de 2022 à 2025 dans 93 départements de France métr
 python -m pip install -r requirements.txt
 ```
 
+## Données déjà préparées
+
+Les fichiers de `data/processed/` sont déposés sur le SSP Cloud, dans un dossier public :
+`https://minio.lab.sspcloud.fr/mbouitibanza/diffusion/dpe-immobilier/`.
+Il n'est donc pas nécessaire de relancer la chaîne de traitement pour exécuter les notebooks : au premier lancement, les fichiers absents de `data/processed/` sont téléchargés depuis cette adresse (`src/chargement.py`).
+
 ## Lancer la chaîne de traitement
 
 Les commandes se lancent depuis la racine du dépôt.

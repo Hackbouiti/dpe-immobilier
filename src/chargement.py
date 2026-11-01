@@ -4,11 +4,18 @@ Tout le monde passe par ces fonctions, pour travailler sur le même échantillon
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import pandas as pd
+import requests
 
 from . import config as C
 
 ETIQUETTES = list("ABCDEFG")
+
+# Copie des fichiers de data/processed sur le stockage du SSP Cloud (dossier
+# public `diffusion`), pour ne pas avoir à relancer la chaîne de traitement.
+URL_SSP = "https://minio.lab.sspcloud.fr/mbouitibanza/diffusion/dpe-immobilier"
 
 COLONNES_ANALYSE = [
     "id_mutation", "date_mutation", "prix", "type_bien", "surface", "nb_pieces", "prix_m2",
@@ -20,17 +27,42 @@ COLONNES_ANALYSE = [
 ]
 
 
+def fichier(nom: str) -> Path:
+    """Chemin d'un fichier de data/processed.
+
+    S'il n'existe pas en local, il est d'abord téléchargé depuis le SSP Cloud
+    (une seule fois : les fois suivantes, la copie locale est lue).
+    """
+    chemin = C.PROCESSED / nom
+    if chemin.exists():
+        return chemin
+    chemin.parent.mkdir(parents=True, exist_ok=True)
+    partiel = chemin.with_name(chemin.name + ".part")
+    print(f"Téléchargement de {nom} depuis le SSP Cloud...")
+    with requests.get(f"{URL_SSP}/{nom}", stream=True, timeout=60) as r:
+        r.raise_for_status()
+        with open(partiel, "wb") as f:
+            for bloc in r.iter_content(chunk_size=1 << 20):
+                f.write(bloc)
+    partiel.replace(chemin)
+    return chemin
+
+
 def charger_ventes(departement: str | None = None, colonnes: list[str] | None = None) -> pd.DataFrame:
     """Toutes les ventes, appariées ou non.
 
     `departement` : code d'un département ("44") pour un essai rapide, None pour la France.
     Ajoute l'année et le trimestre de vente, et met l'étiquette dans l'ordre A à G.
     """
-    if departement:
-        fichier = C.PROCESSED / "ventes" / f"{departement}.parquet"
+    colonnes = colonnes or COLONNES_ANALYSE
+    local = C.PROCESSED / "ventes" / f"{departement}.parquet"
+    if departement and local.exists():
+        ventes = pd.read_parquet(local, columns=colonnes)
+    elif departement:
+        ventes = pd.read_parquet(fichier("ventes_france.parquet"), columns=colonnes,
+                                 filters=[("code_departement", "==", departement)])
     else:
-        fichier = C.PROCESSED / "ventes_france.parquet"
-    ventes = pd.read_parquet(fichier, columns=colonnes or COLONNES_ANALYSE)
+        ventes = pd.read_parquet(fichier("ventes_france.parquet"), columns=colonnes)
     return preparer(ventes)
 
 
