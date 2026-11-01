@@ -6,3 +6,6 @@ __pycache__/
 *.part
 _to_delete/
 *.tmp
+
+# documents internes
+docs/plan_et_repartition.pdf
