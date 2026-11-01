@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src import clean, config as C, match, pipeline
+from src import chargement, clean, config as C, match, pipeline
 
 COLS_DVF = ["id_mutation", "date_mutation", "numero_disposition", "nature_mutation", "valeur_fonciere",
             "adresse_numero", "adresse_suffixe", "adresse_code_voie", "adresse_nom_voie", "code_postal",
@@ -237,3 +237,18 @@ def test_repli_spatial(dvf_brut, dpe_brut):
 def test_perimetre():
     assert len(C.DEPARTEMENTS) == 93
     assert not {"57", "67", "68", "20"} & set(C.DEPARTEMENTS) and {"2A", "2B"} <= set(C.DEPARTEMENTS)
+
+
+def test_echantillon_analyse():
+    v = chargement.preparer(pd.DataFrame({
+        "date_mutation": pd.to_datetime(["2022-03-01", "2023-07-15", "2024-01-02", "2025-11-30"]),
+        "apparie": [True, True, False, True],
+        "vente_rapprochee": [False, True, False, None],
+        "ambigu": [False, False, None, True],
+        "methode_appariement": ["adresse", "adresse", None, "spatial"],
+        "etiquette_dpe": ["D", "G", None, "A"],
+    }))
+    assert list(v["trimestre"]) == ["2022Q1", "2023Q3", "2024Q1", "2025Q4"]
+    ech = chargement.echantillon_analyse(v)
+    assert len(ech) == 2                       # non appariée et rapprochée écartées
+    assert len(chargement.appariement_strict(ech)) == 1   # la vente ambiguë et spatiale part
