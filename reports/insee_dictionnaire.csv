@@ -1,0 +1,29 @@
+TAB_MEASURE,TAB_MEASURE_LABEL,TIME_PERIOD
+DTH,Nombre de décès,2025
+DWELLINGS,Logements,2023
+DWELLINGS_OCS_DW_MAIN,Logements – Résidences principales,2023
+DWELLINGS_OCS_DW_MAIN_TSH_100,Logements – Résidences principales * Propriétaire,2023
+DWELLINGS_OCS_DW_SEC_DW_OCC,Logements – Résidences secondaires et logements occasionnels,2023
+DWELLINGS_OCS_DW_VAC,Logements – Logements vacants,2023
+DWELLINGS_POPSIZE,Population des ménages,2023
+LVB,Nombre de naissances vivantes,2025
+MED_SL,Niveau de vie médian (en euros),2023
+NBEMP_EMPFORM_2,Nombre d’emplois – Salariés,2023
+POP,Population,2023
+POP_AGE_Y15T64,Population – De 15 à 64 ans,2023
+PR_MD60,Taux de pauvreté (en %) au seuil de 60 % de la médiane du niveau de vie,2023
+SUP,Superficie,2023
+UNIT_LOC,Établissements,2024
+UNIT_LOC_ACTIVITY_AZ,"Établissements – Agriculture, sylviculture et pêche",2024
+UNIT_LOC_ACTIVITY_BE,"Établissements – Industrie manufacturière, industries extractives et autres",2024
+UNIT_LOC_ACTIVITY_FZ,Établissements – Construction,2024
+UNIT_LOC_ACTIVITY_GU,Établissements – Services principalement marchands,2024
+UNIT_LOC_ACTIVITY_OQ,"Établissements – Administration publique, enseignement, santé humaine et action sociale",2024
+UNIT_LOC_NUMBER_EMPL_E100T199,Établissements – 100 à 199 salariés,2024
+UNIT_LOC_NUMBER_EMPL_E10T19,Établissements – 10 à 19 salariés,2024
+UNIT_LOC_NUMBER_EMPL_E1T4,Établissements – 1 à 4 salariés,2024
+UNIT_LOC_NUMBER_EMPL_E200T499,Établissements – 200 à 499 salariés,2024
+UNIT_LOC_NUMBER_EMPL_E20T49,Établissements – 20 à 49 salariés,2024
+UNIT_LOC_NUMBER_EMPL_E50T99,Établissements – 50 à 99 salariés,2024
+UNIT_LOC_NUMBER_EMPL_E5T9,Établissements – 5 à 9 salariés,2024
+UNIT_LOC_NUMBER_EMPL_E_GE500,Établissements – 500 salariés et plus,2024
