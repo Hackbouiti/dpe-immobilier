@@ -252,3 +252,27 @@ def test_echantillon_analyse():
     ech = chargement.echantillon_analyse(v)
     assert len(ech) == 2                       # non appariée et rapprochée écartées
     assert len(chargement.appariement_strict(ech)) == 1   # la vente ambiguë et spatiale part
+
+
+def test_rapport_qualite_donnees():
+    df = pd.DataFrame({
+        "surface": [50, 60, None, 60],
+        "type_bien": ["maison", "appartement", "maison", None]
+    })
+
+    rapport = clean.rapport_qualite_donnees(df)
+
+    # Vérifier le nombre de valeurs manquantes.
+    assert rapport.loc["surface", "valeurs_manquantes"] == 1
+    assert rapport.loc["type_bien", "valeurs_manquantes"] == 1
+
+    # Vérifier le pourcentage de valeurs manquantes.
+    assert rapport.loc["surface", "pourcentage_manquant"] == 25
+    assert rapport.loc["type_bien", "pourcentage_manquant"] == 25
+
+    # Vérifier le nombre de valeurs distinctes.
+    assert rapport.loc["surface", "valeurs_distinctes"] == 2
+    assert rapport.loc["type_bien", "valeurs_distinctes"] == 2
+
+    # Vérifier la présence des informations sur les types.
+    assert "type_donnee" in rapport.columns

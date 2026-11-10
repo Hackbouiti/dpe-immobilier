@@ -235,3 +235,19 @@ def nettoyer_dpe(brut: pd.DataFrame) -> pd.DataFrame:
     d["cle_adresse"] = cle_adresse(d["code_insee_ban"], d["numero_norm"], d["voie_norm"])
     d["dpe_genere_immeuble"] = d["methode_application_dpe"].astype(str).str.contains("immeuble")
     return d.reset_index(drop=True)
+
+
+def rapport_qualite_donnees(df: pd.DataFrame) -> pd.DataFrame:
+    """Résume la qualité des données pour chaque variable."""
+
+    rapport = pd.DataFrame({
+        "type_donnee": df.dtypes.astype(str),
+        "valeurs_manquantes": df.isna().sum(),
+        "pourcentage_manquant": df.isna().mean() * 100,
+        "valeurs_distinctes": df.nunique()
+    })
+
+    return rapport.sort_values(
+        by="pourcentage_manquant",
+        ascending=False
+    )
