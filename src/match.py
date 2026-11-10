@@ -71,33 +71,81 @@ def _candidats_adresse(v: pd.DataFrame, d: pd.DataFrame) -> pd.DataFrame:
 def _candidats_spatiaux(v: pd.DataFrame, d: pd.DataFrame) -> pd.DataFrame:
     """Voisinage par grille : chaque DPE est rangé dans une case de côté
     max(rayons) ; chaque vente est comparée aux DPE des 9 cases voisines."""
+
     rayons = C.RAYON_SPATIAL_M
     pas = float(max(rayons.values()))
+
     v = v.dropna(subset=["x_l93", "y_l93"])
     d = d.dropna(subset=["x_l93", "y_l93"])
-    if v.empty or d.empty:
-        return pd.DataFrame(columns=["id_vente", "id_dpe", "methode", "distance_m"])
 
-    d = d.assign(gx=(d["x_l93"] // pas).astype(np.int64), gy=(d["y_l93"] // pas).astype(np.int64))
+    if v.empty or d.empty:
+        return pd.DataFrame(
+            columns=["id_vente", "id_dpe", "methode", "distance_m"]
+        )
+
+    d = d.assign(
+        gx=(d["x_l93"] // pas).astype(np.int64),
+        gy=(d["y_l93"] // pas).astype(np.int64)
+    )
+
     gx0 = (v["x_l93"] // pas).astype(np.int64)
     gy0 = (v["y_l93"] // pas).astype(np.int64)
+
     voisins = []
+
     for dx in (-1, 0, 1):
         for dy in (-1, 0, 1):
-            voisins.append(pd.DataFrame({
-                "id_vente": v["id_vente"].values, "type_bien": v["type_bien"].values,
-                "code_commune": v["code_commune"].values,
-                "xv": v["x_l93"].values, "yv": v["y_l93"].values,
-                "gx": (gx0 + dx).values, "gy": (gy0 + dy).values}))
+            voisins.append(
+                pd.DataFrame({
+                    "id_vente": v["id_vente"].values,
+                    "type_bien": v["type_bien"].values,
+                    "code_commune": v["code_commune"].values,
+                    "xv": v["x_l93"].values,
+                    "yv": v["y_l93"].values,
+                    "gx": (gx0 + dx).values,
+                    "gy": (gy0 + dy).values
+                })
+            )
+
     vv = pd.concat(voisins, ignore_index=True)
-    c = vv.merge(d[["id_dpe", "type_bien", "code_insee_ban", "x_l93", "y_l93", "gx", "gy"]],
-                 left_on=["gx", "gy", "type_bien", "code_commune"],
-                 right_on=["gx", "gy", "type_bien", "code_insee_ban"])
-    c["distance_m"] = np.hypot(c["xv"] - c["x_l93"], c["yv"] - c["y_l93"])
-    c = c[c["distance_m"] <= c["type_bien"].map(rayons)]
-    return c[["id_vente", "id_dpe", "distance_m"]].assign(methode="spatial")
 
+    c = vv.merge(
+        d[
+            [
+                "id_dpe",
+                "type_bien",
+                "code_insee_ban",
+                "x_l93",
+                "y_l93",
+                "gx",
+                "gy"
+            ]
+        ],
+        left_on=["gx", "gy", "type_bien", "code_commune"],
+        right_on=["gx", "gy", "type_bien", "code_insee_ban"]
+    )
 
+    # Vérifier si la fusion a produit des candidats.
+    # Si aucun candidat n'est trouvé, retourner un DataFrame vide.
+    if c.empty:
+        return pd.DataFrame(
+            columns=["id_vente", "id_dpe", "methode", "distance_m"]
+        )
+
+    # Calculer la distance entre chaque vente et chaque DPE candidat.
+    c["distance_m"] = np.hypot(
+        c["xv"] - c["x_l93"],
+        c["yv"] - c["y_l93"]
+    )
+
+    # Conserver uniquement les candidats situés dans le rayon autorisé.
+    c = c[
+        c["distance_m"] <= c["type_bien"].map(rayons)
+    ]
+
+    return c[
+        ["id_vente", "id_dpe", "distance_m"]
+    ].assign(methode="spatial")
 # ---------------------------------------------------------------------------
 # Attribution un-pour-un
 # ---------------------------------------------------------------------------
