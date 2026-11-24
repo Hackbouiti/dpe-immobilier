@@ -28,6 +28,16 @@ def main():
         )
 
     # Repères réglementaires : mesures applicables aux locations en métropole.
+    # 24 août 2022 : gel des augmentations de loyers pour les logements F et G concernés.
+    date_gel_loyers = 2022 + 235 / 365
+    ax.axvline(date_gel_loyers, color="darkorange", linestyle="-.", linewidth=1.5)
+    ax.annotate(
+        "24 août 2022 : gel des hausses de loyers\npour les logements F et G",
+        xy=(date_gel_loyers, -8.0), xytext=(2022.02, -13.4),
+        fontsize=8, color="darkorange",
+        arrowprops={"arrowstyle": "->", "color": "darkorange"},
+    )
+
     ax.axvline(2023, color="grey", linestyle=":", linewidth=1.5)
     ax.annotate(
         "2023 : seuil de 450 kWhEF/m²/an\npour les logements G les plus énergivores",
