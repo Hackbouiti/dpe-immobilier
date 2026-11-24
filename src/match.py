@@ -93,6 +93,9 @@ def _candidats_spatiaux(v: pd.DataFrame, d: pd.DataFrame) -> pd.DataFrame:
     c = vv.merge(d[["id_dpe", "type_bien", "code_insee_ban", "x_l93", "y_l93", "gx", "gy"]],
                  left_on=["gx", "gy", "type_bien", "code_commune"],
                  right_on=["gx", "gy", "type_bien", "code_insee_ban"])
+    if c.empty:
+        return pd.DataFrame(columns=["id_vente", "id_dpe", "distance_m", "methode"])
+
     c["distance_m"] = np.hypot(c["xv"] - c["x_l93"], c["yv"] - c["y_l93"])
     c = c[c["distance_m"] <= c["type_bien"].map(rayons)]
     return c[["id_vente", "id_dpe", "distance_m"]].assign(methode="spatial")

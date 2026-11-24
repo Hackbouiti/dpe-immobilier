@@ -124,3 +124,49 @@ def test_ecarts_annuels_conserve_mode_strict(monkeypatch):
     )
 
     assert appels == [True]
+
+
+def test_bootstrap_reproduit_les_ecarts_ponctuels(monkeypatch):
+    from src import bootstrap
+
+    donnees = creer_donnees_test()
+
+    monkeypatch.setattr(
+        chargement,
+        "preparer",
+        lambda df: df,
+    )
+    monkeypatch.setattr(
+        chargement,
+        "echantillon_analyse",
+        lambda df: df,
+    )
+
+    classique = ecarts.calculer_ecarts(
+        donnees,
+        reference="D",
+    )
+
+    resultat = bootstrap.bootstrap_ecarts(
+        donnees,
+        reference="D",
+        n_boot=10,
+        seed=42,
+    )
+
+    comparaison = classique.merge(
+        resultat,
+        on=["reference", "etiquette"],
+        suffixes=("_classique", "_bootstrap"),
+    )
+
+    assert np.allclose(
+        comparaison["ecart_brut_pct_classique"],
+        comparaison["ecart_brut_pct_bootstrap"],
+    )
+
+    assert np.allclose(
+        comparaison["ecart_comparable_pct_classique"],
+        comparaison["ecart_comparable_pct_bootstrap"],
+        equal_nan=True,
+    )
