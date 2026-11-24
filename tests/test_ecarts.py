@@ -88,3 +88,39 @@ def test_min_effectif_invalide():
             reference="D",
             min_effectif=0,
         )
+
+def test_ecarts_annuels_conserve_mode_strict(monkeypatch):
+    donnees = pd.DataFrame({
+        "date_mutation": pd.to_datetime(["2022-03-15"]),
+        "annee": [2022],
+    })
+
+    monkeypatch.setattr(
+        ecarts,
+        "preparer_echantillon",
+        lambda ventes, strict=False: donnees.copy(),
+    )
+
+    appels = []
+
+    def faux_calculer_ecarts(
+        ventes,
+        reference="G",
+        min_effectif=1,
+        strict=False,
+    ):
+        appels.append(strict)
+        return pd.DataFrame({"etiquette": ["D"]})
+
+    monkeypatch.setattr(
+        ecarts,
+        "calculer_ecarts",
+        faux_calculer_ecarts,
+    )
+
+    ecarts.calculer_ecarts_annuels(
+        donnees,
+        strict=True,
+    )
+
+    assert appels == [True]

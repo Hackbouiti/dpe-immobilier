@@ -261,7 +261,7 @@ def calculer_ecarts_annuels(
             donnees_annee,
             reference=reference,
             min_effectif=min_effectif,
-            strict=False,
+            strict=strict,
         )
 
         resultat.insert(0, "annee", int(annee))
