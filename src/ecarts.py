@@ -31,7 +31,7 @@ def preparer_echantillon(ventes, strict=False):
     df = chargement.echantillon_analyse(df)
 
     if strict:
-        df = df.loc[chargement.appariement_strict(df)].copy()
+        df = chargement.appariement_strict(df)
 
     df = df.copy()
 
