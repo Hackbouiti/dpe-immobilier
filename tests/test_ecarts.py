@@ -170,3 +170,22 @@ def test_bootstrap_reproduit_les_ecarts_ponctuels(monkeypatch):
         comparaison["ecart_comparable_pct_bootstrap"],
         equal_nan=True,
     )
+
+
+def test_bootstrap_commune_sans_vente_dans_l_echantillon(monkeypatch):
+    """Une commune présente dans les catégories mais absente de l'échantillon
+    ne doit pas faire échouer le bootstrap (cas rencontré avec pandas 2.x)."""
+    from src import bootstrap
+
+    donnees = creer_donnees_test()
+    donnees["code_commune"] = pd.Categorical(
+        donnees["code_commune"],
+        categories=["35238", "99999"],
+    )
+
+    monkeypatch.setattr(chargement, "preparer", lambda df: df)
+    monkeypatch.setattr(chargement, "echantillon_analyse", lambda df: df)
+
+    resultat = bootstrap.bootstrap_ecarts(donnees, reference="D", n_boot=10, seed=42)
+
+    assert not resultat.empty

@@ -158,11 +158,13 @@ def bootstrap_ecarts(
         )
 
         numerateur_commune = numerateur.groupby(
-            communes_groupes
+            communes_groupes,
+            observed=True,
         ).sum()
 
         denominateur_commune = denominateur.groupby(
-            communes_groupes
+            communes_groupes,
+            observed=True,
         ).sum()
 
         tableau = np.zeros((nombre_communes, 2))
