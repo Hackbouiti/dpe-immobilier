@@ -94,11 +94,11 @@ def _candidats_spatiaux(v: pd.DataFrame, d: pd.DataFrame) -> pd.DataFrame:
                  left_on=["gx", "gy", "type_bien", "code_commune"],
                  right_on=["gx", "gy", "type_bien", "code_insee_ban"])
     c["distance_m"] = np.hypot(c["xv"] - c["x_l93"], c["yv"] - c["y_l93"])
-    c = c[c["distance_m"] <= c["type_bien"].map(rayons)]
+    c = c[c["distance_m"] <= c["type_bien"].map(rayons).astype(float)]
     return c[["id_vente", "id_dpe", "distance_m"]].assign(methode="spatial")
 
 
-# ---------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 # Attribution un-pour-un
 # ---------------------------------------------------------------------------
 def attribution_unique(cand: pd.DataFrame) -> pd.DataFrame:
@@ -201,8 +201,9 @@ def apparier(ventes: pd.DataFrame, dpe: pd.DataFrame) -> tuple[pd.DataFrame, dic
         n_apparie_adresse=int((out["methode_appariement"] == "adresse").sum()),
         n_apparie_spatial=int((out["methode_appariement"] == "spatial").sum()),
         n_ambigu=int(out["ambigu"].fillna(False).sum()),
-        n_ventes_dpe_partage=int(out.loc[out["apparie"], "numero_dpe"].duplicated(keep=False).sum()),
-    )
+        n_ventes_dpe_partage=int(
+            out.loc[out["apparie"], "numero_dpe"].duplicated(keep=False).sum()
+        )),
     for t in ("maison", "appartement"):
         sous = out[out["type_bien"] == t]
         stats[f"taux_{t}"] = round(sous["apparie"].mean(), 4) if len(sous) else None
