@@ -252,3 +252,24 @@ def test_echantillon_analyse():
     ech = chargement.echantillon_analyse(v)
     assert len(ech) == 2                       # non appariée et rapprochée écartées
     assert len(chargement.appariement_strict(ech)) == 1   # la vente ambiguë et spatiale part
+
+
+def test_repli_spatial_type_bien_categorie():
+    """Le repli spatial fonctionne aussi quand type_bien est une catégorie,
+    comme après chargement.preparer()."""
+    ventes = pd.DataFrame({
+        "id_vente": [1, 2],
+        "type_bien": pd.Categorical(["maison", "appartement"]),
+        "code_commune": ["44109", "44109"],
+        "x_l93": [1000.0, 5000.0],
+        "y_l93": [1000.0, 5000.0],
+    })
+    dpe = pd.DataFrame({
+        "id_dpe": [10, 20],
+        "type_bien": pd.Categorical(["maison", "appartement"]),
+        "code_insee_ban": ["44109", "44109"],
+        "x_l93": [1030.0, 5030.0],   # 30 m : dans le rayon d'une maison, pas d'un appartement
+        "y_l93": [1000.0, 5000.0],
+    })
+    candidats = match._candidats_spatiaux(ventes, dpe)
+    assert list(candidats["id_vente"]) == [1]

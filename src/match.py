@@ -97,7 +97,9 @@ def _candidats_spatiaux(v: pd.DataFrame, d: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame(columns=["id_vente", "id_dpe", "distance_m", "methode"])
 
     c["distance_m"] = np.hypot(c["xv"] - c["x_l93"], c["yv"] - c["y_l93"])
-    c = c[c["distance_m"] <= c["type_bien"].map(rayons)]
+    # astype(float) : si type_bien est une catégorie, map() renvoie aussi une
+    # catégorie, qui ne peut pas être comparée à une distance.
+    c = c[c["distance_m"] <= c["type_bien"].map(rayons).astype(float)]
     return c[["id_vente", "id_dpe", "distance_m"]].assign(methode="spatial")
 
 
