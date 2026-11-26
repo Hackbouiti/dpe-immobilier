@@ -5,9 +5,19 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def main():
-    fichier = Path("reports/tables/evolution_annuelle_F_G.csv")
-    df = pd.read_csv(fichier)
+RACINE = Path(__file__).resolve().parents[1]
+DOSSIER_TABLEAUX = RACINE / "reports" / "tables"
+DOSSIER_FIGURES = RACINE / "reports" / "figures"
+
+
+def graphique_evolution(df=None, enregistrer=True):
+    """Courbe des écarts de F et G par rapport à D, année par année.
+
+    df : tableau produit par produire_evolution_annuelle.calculer_evolution.
+    S'il n'est pas fourni, le tableau enregistré dans reports/tables est lu.
+    """
+    if df is None:
+        df = pd.read_csv(DOSSIER_TABLEAUX / "evolution_annuelle_F_G.csv")
 
     fig, ax = plt.subplots(figsize=(11, 6.5))
 
@@ -72,13 +82,14 @@ def main():
     )
 
     fig.tight_layout()
-    dossier = Path("reports/figures")
-    dossier.mkdir(parents=True, exist_ok=True)
-    fig.savefig(dossier / "evolution_annuelle_F_G.png", dpi=300, bbox_inches="tight")
-    fig.savefig(dossier / "evolution_annuelle_F_G.pdf", bbox_inches="tight")
-    plt.close(fig)
-    print("Graphiques enregistrés dans reports/figures/")
+    if enregistrer:
+        DOSSIER_FIGURES.mkdir(parents=True, exist_ok=True)
+        fig.savefig(DOSSIER_FIGURES / "evolution_annuelle_F_G.png", dpi=300, bbox_inches="tight")
+        fig.savefig(DOSSIER_FIGURES / "evolution_annuelle_F_G.pdf", bbox_inches="tight")
+
+    return fig
 
 
 if __name__ == "__main__":
-    main()
+    plt.close(graphique_evolution())
+    print(f"Graphiques enregistrés dans {DOSSIER_FIGURES}")

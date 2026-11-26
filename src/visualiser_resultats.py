@@ -7,13 +7,19 @@ import numpy as np
 import pandas as pd
 
 
-DOSSIER_TABLEAUX = Path("reports/tables")
-DOSSIER_FIGURES = Path("reports/figures")
+RACINE = Path(__file__).resolve().parents[1]
+DOSSIER_TABLEAUX = RACINE / "reports" / "tables"
+DOSSIER_FIGURES = RACINE / "reports" / "figures"
 
 
-def graphique_ecarts():
-    fichier = DOSSIER_TABLEAUX / "resultats_principaux_bootstrap.csv"
-    df = pd.read_csv(fichier)
+def graphique_ecarts(df=None, enregistrer=True):
+    """Graphique des écarts brut et comparable, avec G et D comme références.
+
+    df : tableau produit par produire_resultats.calculer_resultats. S'il n'est
+    pas fourni, le tableau enregistré dans reports/tables est lu.
+    """
+    if df is None:
+        df = pd.read_csv(DOSSIER_TABLEAUX / "resultats_principaux_bootstrap.csv")
 
     references = ["G", "D"]
 
@@ -99,19 +105,14 @@ def graphique_ecarts():
 
     fig.tight_layout(rect=[0, 0.05, 1, 0.93])
 
-    DOSSIER_FIGURES.mkdir(parents=True, exist_ok=True)
+    if enregistrer:
+        DOSSIER_FIGURES.mkdir(parents=True, exist_ok=True)
+        fig.savefig(DOSSIER_FIGURES / "ecarts_prix_references.png", dpi=300, bbox_inches="tight")
+        fig.savefig(DOSSIER_FIGURES / "ecarts_prix_references.pdf", bbox_inches="tight")
 
-    chemin_png = DOSSIER_FIGURES / "ecarts_prix_references.png"
-    chemin_pdf = DOSSIER_FIGURES / "ecarts_prix_references.pdf"
-
-    fig.savefig(chemin_png, dpi=300, bbox_inches="tight")
-    fig.savefig(chemin_pdf, bbox_inches="tight")
-
-    plt.close(fig)
-
-    print(f"Graphique PNG enregistré : {chemin_png}")
-    print(f"Graphique PDF enregistré : {chemin_pdf}")
+    return fig
 
 
 if __name__ == "__main__":
-    graphique_ecarts()
+    plt.close(graphique_ecarts())
+    print(f"Graphiques enregistrés dans {DOSSIER_FIGURES}")
