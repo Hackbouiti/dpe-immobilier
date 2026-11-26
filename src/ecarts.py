@@ -64,15 +64,18 @@ def _resumer_groupes(df, reference, cible):
 
     variables = VARIABLES_COMPARAISON + ["etiquette_dpe"]
 
+    # Le logarithme est calculé une seule fois, avant le regroupement :
+    # une fonction lambda appliquée groupe par groupe est beaucoup plus lente.
     resume = (
-        df.groupby(
+        df.assign(log_prix_m2=np.log(df["prix_m2"]))
+        .groupby(
             variables,
             observed=True,
             dropna=False,
-        )["prix_m2"]
+        )["log_prix_m2"]
         .agg(
             effectif="count",
-            moyenne_log=lambda x: np.log(x).mean(),
+            moyenne_log="mean",
         )
         .reset_index()
     )
