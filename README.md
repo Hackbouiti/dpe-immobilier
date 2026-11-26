@@ -6,6 +6,18 @@ Nous cherchons à savoir si les logements mieux classés au diagnostic de perfor
 
 Le dépôt contient la chaîne de traitement qui relie les ventes immobilières aux diagnostics, puis l'analyse. Les choix de méthode sont expliqués dans `docs/note_de_projet.pdf`.
 
+## Pour les examinateurs
+
+**Le rendu final est le notebook [`notebooks/rapport.ipynb`](notebooks/rapport.ipynb).** Il est enregistré déjà exécuté : les tableaux et les figures s'affichent directement sur GitHub. Pour le relancer, il suffit d'installer les dépendances (section Installation) puis d'exécuter toutes les cellules ; les données préparées se téléchargent automatiquement au premier lancement.
+
+Les autres notebooks sont des notebooks de travail, conservés pour la traçabilité :
+
+| Notebook | Contenu |
+|---|---|
+| `exploration.ipynb` | première exploration des données |
+| `verification_appariement.ipynb` | contrôles de la qualité de l'appariement |
+| `karlane_description.ipynb`, `karlane_description_france.ipynb` | travail préparatoire aux statistiques descriptives de la partie 2 |
+
 ## Données
 
 | Source | Producteur | Accès |
@@ -27,6 +39,20 @@ python -m pip install -r requirements.txt
 Les fichiers de `data/processed/` sont déposés sur le SSP Cloud, dans un dossier public :
 `https://minio.lab.sspcloud.fr/mbouitibanza/diffusion/dpe-immobilier/`.
 Il n'est donc pas nécessaire de relancer la chaîne de traitement pour exécuter les notebooks : au premier lancement, les fichiers absents de `data/processed/` sont téléchargés depuis cette adresse (`src/chargement.py`).
+
+## Le rapport
+
+Le rapport est le notebook `notebooks/rapport.ipynb`. Il charge les données, calcule tous les résultats (y compris les intervalles de confiance par bootstrap) et produit les figures. Il s'exécute de bout en bout en moins d'une minute une fois les données téléchargées.
+
+Pour travailler sur les données, toujours passer par `chargement.charger_ventes()` puis `chargement.echantillon_analyse()`, plutôt que de lire les fichiers Parquet directement : ces fonctions convertissent les colonnes `ambigu` et `vente_rapprochee` en vrai/faux et transforment les colonnes texte en catégories. Avec des catégories, utiliser `observed=True` dans les `groupby`.
+
+Les tableaux de résultats peuvent aussi être écrits dans `reports/tables/` sans ouvrir le notebook :
+
+```bash
+python -m src.produire_resultats            # écarts et intervalles, standard et strict
+python -m src.produire_robustesse           # comparaison standard et strict
+python -m src.produire_evolution_annuelle   # écarts de F et G par année
+```
 
 ## Lancer la chaîne de traitement
 
@@ -67,11 +93,11 @@ Les deux bases n'ont pas d'identifiant commun. Une vente reçoit un DPE selon le
 1. même adresse et même type de logement ;
 2. à défaut, un DPE de même type à moins de 20 m (appartement) ou 60 m (maison) du centre de la parcelle de la vente ;
 3. une surface proche : écart d'au plus 10 % pour un appartement et 20 % pour une maison ;
-4. un DPE établi avant la vente, depuis moins de trois ans ; à surface égale, le plus récent ;
+4. un DPE établi avant la vente, depuis moins de trois ans ; son ancienneté entre dans le score, si bien qu'à surface égale le plus récent est préféré ;
 5. un DPE ne peut pas être attribué à deux logements différents, mais plusieurs ventes du même logement peuvent partager le même DPE ;
 6. une vente est signalée comme ambiguë (`ambigu`) quand un autre DPE presque aussi proche porte une étiquette différente.
 
-La colonne `vente_rapprochee` signale les ventes d'un même logement à moins de 30 jours d'écart. Il s'agit le plus souvent de cessions de parts, dont le prix ne correspond pas au logement entier.
+La colonne `vente_rapprochee` signale les ventes d'un même logement à moins de 30 jours d'écart. Il peut s'agir de doublons d'enregistrement ou d'opérations successives sur un même bien ; ces ventes sont exclues de l'échantillon d'analyse.
 
 ## Limites
 
@@ -81,9 +107,9 @@ Les bases n'indiquent pas le numéro de l'appartement : dans un immeuble, le DPE
 
 ```
 data/        données (non versionnées)
-docs/        notes de projet et schéma de la chaîne de traitement
-notebooks/   analyse
-reports/     journal d'appariement
-src/         collecte, nettoyage, appariement
+docs/        note de projet, étude de faisabilité et schéma de la chaîne de traitement
+notebooks/   rapport (rapport.ipynb) et notebooks de travail
+reports/     journal d'appariement, figures et tableaux de résultats
+src/         collecte, nettoyage, appariement, chargement, calcul des écarts
 tests/       tests sur des données fictives
 ```
