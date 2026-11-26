@@ -89,24 +89,36 @@ def fond_departements(dossier):
     return fond.to_crs(2154)
 
 
-def carte_fg(tableau, fond, *, titre):
-    """Afficher les noms et les parts F/G, avec un zoom francilien repéré.
+def carte_departements(
+    tableau,
+    fond,
+    *,
+    colonne,
+    titre,
+    sous_titre,
+    libelle_barre,
+    format_valeur,
+    cmap,
+    vmin,
+    vmax,
+    lecture,
+    note,
+    etendre="neither",
+):
+    """Carte d'un indicateur par département, avec les noms, les valeurs
+    et un zoom sur l'Île-de-France.
 
-    Les étiquettes arrondissent l'affichage à deux décimales seulement.
+    tableau : une ligne par département, avec code_departement et colonne.
+    format_valeur : fonction qui transforme une valeur en texte affiché.
+    etendre : "max" signale par une flèche les valeurs au-delà de vmax.
     Le fond et le tableau d'entrée ne sont pas modifiés.
     """
     inconnus = set(tableau["code_departement"]) - set(fond["code_departement"])
     if inconnus:
         raise ValueError(f"Départements sans contour : {sorted(inconnus)}")
 
-    if tableau.empty or not tableau["part_fg_pct"].between(0, 50).all():
-        raise ValueError("Parts hors de l'échelle 0–50 % : adapter la carte.")
-
-    colonnes = [
-        "code_departement", "nombre_ventes", "nombre_fg", "part_fg_pct"
-    ]
     carte = fond.merge(
-        tableau[colonnes],
+        tableau[["code_departement", colonne]],
         on="code_departement",
         how="left",
         validate="one_to_one",
@@ -119,10 +131,10 @@ def carte_fg(tableau, fond, *, titre):
     barre = fig.add_axes([0.18, 0.105, 0.46, 0.015])
 
     style = {
-        "column": "part_fg_pct",
-        "cmap": "YlOrRd",
-        "vmin": 0,
-        "vmax": 50,
+        "column": colonne,
+        "cmap": cmap,
+        "vmin": vmin,
+        "vmax": vmax,
         "edgecolor": "white",
         "linewidth": 0.7,
         "missing_kwds": {
@@ -139,7 +151,8 @@ def carte_fg(tableau, fond, *, titre):
         **style,
         legend_kwds={
             "orientation": "horizontal",
-            "label": "Ventes F/G parmi les ventes retenues (%)",
+            "label": libelle_barre,
+            "extend": etendre,
         },
     )
 
@@ -210,17 +223,17 @@ def carte_fg(tableau, fond, *, titre):
         "94": (50, 0),
     }
 
-    # Afficher le nom et le pourcentage de chaque département.
+    # Afficher le nom et la valeur de chaque département.
     for axe, zone in ((ax, carte), (ax_zoom, ile_de_france)):
         for _, ligne in zone.iterrows():
             if axe is ax and ligne["region"] == "11":
                 continue
 
             point = ligne.geometry.representative_point()
-            part = ligne["part_fg_pct"]
-            valeur = "ND" if pd.isna(part) else f"{part:.2f} %"
+            valeur = ligne[colonne]
+            texte_valeur = "ND" if pd.isna(valeur) else format_valeur(valeur)
             nom = fill(ligne["nom"], width=15, break_long_words=False)
-            etiquette = nom + "\n" + valeur.replace(".", ",")
+            etiquette = nom + "\n" + texte_valeur
 
             positions = decalages if axe is ax else decalages_zoom
             deplacement = positions.get(ligne["code_departement"], (0, 0))
@@ -264,44 +277,53 @@ def carte_fg(tableau, fond, *, titre):
         fontsize=10,
     )
 
+    fig.suptitle(titre, fontsize=18, y=0.975)
+    fig.text(0.5, 0.925, sous_titre, ha="center", fontsize=12)
+    fig.text(0.87, 0.42, lecture, ha="center", va="top", fontsize=11, color="#475569")
+    fig.text(0.07, 0.035, note, fontsize=10, color="#475569")
+
+    return fig
+
+
+def carte_fg(tableau, fond, *, titre):
+    """Afficher les noms et les parts F/G, avec un zoom francilien repéré.
+
+    Les étiquettes arrondissent l'affichage à deux décimales seulement.
+    Le fond et le tableau d'entrée ne sont pas modifiés.
+    """
+    if tableau.empty or not tableau["part_fg_pct"].between(0, 50).all():
+        raise ValueError("Parts hors de l'échelle 0–50 % : adapter la carte.")
+
     # Résumé calculé à partir des effectifs.
     total = int(tableau["nombre_ventes"].sum())
     part_totale = 100 * tableau["nombre_fg"].sum() / total
     effectif = f"{total:,}".replace(",", " ")
     part_texte = f"{part_totale:.2f}".replace(".", ",")
 
-    fig.suptitle(titre, fontsize=18, y=0.975)
-    fig.text(
-        0.5,
-        0.925,
-        f"{effectif} ventes · {len(tableau)} départements · "
-        f"Part F/G dans l'échantillon : {part_texte} %",
-        ha="center",
-        fontsize=12,
+    return carte_departements(
+        tableau,
+        fond,
+        colonne="part_fg_pct",
+        titre=titre,
+        sous_titre=(
+            f"{effectif} ventes · {len(tableau)} départements · "
+            f"Part F/G dans l'échantillon : {part_texte} %"
+        ),
+        libelle_barre="Ventes F/G parmi les ventes retenues (%)",
+        format_valeur=lambda part: f"{part:.2f} %".replace(".", ","),
+        cmap="YlOrRd",
+        vmin=0,
+        vmax=50,
+        lecture=(
+            "Le cadre en pointillés repère\nl'Île-de-France sur la carte.\n\n"
+            "Chaque étiquette indique\nle département et sa part F/G.\n\n"
+            "Même échelle de couleurs\npour la carte et le zoom."
+        ),
+        note=(
+            "Ventes appariées à un DPE, hors ventes rapprochées. "
+            "Cette part décrit les ventes retenues dans l'analyse.\n"
+            "Elle ne mesure pas la part F/G de l'ensemble du parc de logements.\n"
+            "Sources : DVF–DPE du projet ; contours data.gouv.fr 2025 (ODbL). "
+            "Projection : Lambert-93."
+        ),
     )
-
-    fig.text(
-        0.87,
-        0.42,
-        "Le cadre en pointillés repère\nl'Île-de-France sur la carte.\n\n"
-        "Chaque étiquette indique\nle département et sa part F/G.\n\n"
-        "Même échelle de couleurs\npour la carte et le zoom.",
-        ha="center",
-        va="top",
-        fontsize=11,
-        color="#475569",
-    )
-
-    fig.text(
-        0.07,
-        0.035,
-        "Ventes appariées à un DPE, hors ventes rapprochées. "
-        "Cette part décrit les ventes retenues dans l'analyse.\n"
-        "Elle ne mesure pas la part F/G de l'ensemble du parc de logements.\n"
-        "Sources : DVF–DPE du projet ; contours data.gouv.fr 2025 (ODbL). "
-        "Projection : Lambert-93.",
-        fontsize=10,
-        color="#475569",
-    )
-
-    return fig
