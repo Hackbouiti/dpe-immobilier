@@ -6,6 +6,18 @@ Nous cherchons à savoir si les logements mieux classés au diagnostic de perfor
 
 Le dépôt contient la chaîne de traitement qui relie les ventes immobilières aux diagnostics, puis l'analyse. Les choix de méthode sont expliqués dans `docs/note_de_projet.pdf`.
 
+## Pour les examinateurs
+
+**Le rendu final est le notebook [`notebooks/rapport.ipynb`](notebooks/rapport.ipynb).** Il est enregistré déjà exécuté : les tableaux et les figures s'affichent directement sur GitHub. Pour le relancer, il suffit d'installer les dépendances (section Installation) puis d'exécuter toutes les cellules ; les données préparées se téléchargent automatiquement au premier lancement.
+
+Les autres notebooks sont des notebooks de travail, conservés pour la traçabilité :
+
+| Notebook | Contenu |
+|---|---|
+| `exploration.ipynb` | première exploration des données |
+| `verification_appariement.ipynb` | contrôles de la qualité de l'appariement |
+| `karlane_description.ipynb`, `karlane_description_france.ipynb` | travail préparatoire aux statistiques descriptives de la partie 2 |
+
 ## Données
 
 | Source | Producteur | Accès |
@@ -85,7 +97,7 @@ Les deux bases n'ont pas d'identifiant commun. Une vente reçoit un DPE selon le
 5. un DPE ne peut pas être attribué à deux logements différents, mais plusieurs ventes du même logement peuvent partager le même DPE ;
 6. une vente est signalée comme ambiguë (`ambigu`) quand un autre DPE presque aussi proche porte une étiquette différente.
 
-La colonne `vente_rapprochee` signale les ventes d'un même logement à moins de 30 jours d'écart. Il s'agit le plus souvent de cessions de parts, dont le prix ne correspond pas au logement entier.
+La colonne `vente_rapprochee` signale les ventes d'un même logement à moins de 30 jours d'écart. Il peut s'agir de doublons d'enregistrement ou d'opérations successives sur un même bien ; ces ventes sont exclues de l'échantillon d'analyse.
 
 ## Limites
 
@@ -95,7 +107,7 @@ Les bases n'indiquent pas le numéro de l'appartement : dans un immeuble, le DPE
 
 ```
 data/        données (non versionnées)
-docs/        notes de projet et schéma de la chaîne de traitement
+docs/        note de projet, étude de faisabilité et schéma de la chaîne de traitement
 notebooks/   rapport (rapport.ipynb) et notebooks de travail
 reports/     journal d'appariement, figures et tableaux de résultats
 src/         collecte, nettoyage, appariement, chargement, calcul des écarts
